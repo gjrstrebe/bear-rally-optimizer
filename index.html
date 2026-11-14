@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whiteout Survival: Bear Trap Optimizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        frost: {
+                            950: '#070d19',
+                            900: '#0f172a',
+                            800: '#1e293b',
+                            700: '#334155',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 8px;
+            border-radius: 999px;
+            background: #1e293b;
+            border: 1px solid #334155;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #38bdf8;
+            border: 2px solid #0f172a;
+            margin-top: -7px;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+            transition: transform 0.15s ease, background-color 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.12);
+            background: #7dd3fc;
+        }
+    </style>
+</head>
+<body class="bg-frost-950 text-slate-100 font-sans antialiased min-h-screen pb-12 selection:bg-sky-500 selection:text-white">
+
+    <!-- Top Navigation / Header -->
+    <header class="bg-frost-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-xl shadow-lg shadow-sky-500/20 shrink-0">
+                    🐻
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-white leading-tight">
+                        Bear Trap Conveyor Optimizer
+                    </h1>
+                    <p class="text-xs text-slate-400">Whiteout Survival • 30-Min Rally Cadence &amp; Preset Calculator</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div id="strategyBadge" class="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                    Staggered Conveyor Mode
+                </div>
+                <button id="adminOpenBtn" type="button" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition cursor-pointer">
+                    <span>🔒</span>
+                    <span>Admin</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 pt-6 space-y-6">
+
+        <!-- Top Grid: Inputs on Left, Preset & Copy-Paste Summary on Right -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- LEFT COLUMN: Alliance & Whale Inputs (5 cols) -->
+            <section class="lg:col-span-5 bg-frost-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-sky-400 flex items-center gap-2">
+                        <span>⚙️</span> Event &amp; Whale Parameters
+                    </h2>
+                    <button id="resetBtn" type="button" class="text-xs text-slate-400 hover:text-white transition underline cursor-pointer">
+                        Reset Defaults
+                    </button>
+                </div>
+
+                <!-- Online & Participating Players -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label for="participants" class="text-sm font-medium text-slate-200">Online &amp; Participating</label>
+                        <span id="participantsVal" class="font-mono text-sm font-bold text-sky-400 bg-sky-950/60 px-2.5 py-0.5 rounded-lg border border-sky-500/20">24 Players</span>
+                    </div>
+                    <input type="range" id="participants" min="4" max="75" value="24" class="w-full">
+                    <div class="flex justify-between text-[11px] text-slate-500">
+                        <span>4 (Low Turnout)</span>
+                        <span id="rangeMidLabel" class="text-sky-400/80 font-medium">13–34 Conveyor</span>
+                        <span id="rangeHighLabel" class="text-amber-400/80 font-medium">35+ FFA</span>
+                    </div>
+                </div>
+
+                <!-- No Whales Present Toggle -->
+                <div class="flex items-center justify-between bg-frost-950/80 border border-slate-800 rounded-xl px-3.5 py-2.5">
+                    <div>
+                        <span class="text-xs font-semibold text-slate-200 block">No Whales Present / Off-Hours</span>
+                        <span class="text-[11px] text-slate-400">Forces uncapped All-Hands rallies if heavy hitters are offline</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="noWhalesToggle" class="sr-only peer">
+                        <div class="w-10 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-500"></div>
+                    </label>
+                </div>
+
+                <!-- Whale Rally Capacity & Whale Own March -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                    <div class="space-y-1.5">
+                        <label for="whaleRallyCap" class="block text-xs font-medium text-slate-300">Whale Rally Capacity</label>
+                        <input type="number" id="whaleRallyCap" value="1300000" step="10000" min="200000" max="3500000"
+                            class="w-full bg-frost-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono text-white focus:outline-none focus:border-sky-400 transition">
+                        <span class="text-[11px] text-slate-500 block">Total whale rally size</span>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label for="whaleOwnMarch" class="block text-xs font-medium text-slate-300">Whale's Own March</label>
+                        <input type="number" id="whaleOwnMarch" value="180000" step="5000" min="50000" max="500000"
+                            class="w-full bg-frost-950 border border-slate-700 rounded-xl px-3 py-2 text-sm font-mono text-white focus:outline-none focus:border-sky-400 transition">
+                        <span class="text-[11px] text-slate-500 block">Subtracted before ÷ 14</span>
+                    </div>
+                </div>
+
+                <!-- Number of Whales / Top Rally Leaders -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label for="whaleCount" class="text-sm font-medium text-slate-200">Whale / Top Rally Leaders</label>
+                        <span id="whaleCountVal" class="font-mono text-sm font-bold text-emerald-400 bg-emerald-950/60 px-2.5 py-0.5 rounded-lg border border-emerald-500/20">5 Whales</span>
+                    </div>
+                    <input type="range" id="whaleCount" min="2" max="10" value="5" class="w-full">
+                    <p class="text-[11px] text-slate-400">Determines how many staggered lanes run on the conveyor belt.</p>
+                </div>
+
+                <!-- Exposed Round-Trip March Time -->
+                <div class="space-y-2 bg-frost-950/80 p-3.5 rounded-xl border border-slate-800/90">
+                    <div class="flex justify-between items-center">
+                        <label for="roundTripTime" class="text-sm font-medium text-slate-200">Round-Trip March Time</label>
+                        <span id="roundTripVal" class="font-mono text-sm font-bold text-amber-400 bg-amber-950/60 px-2.5 py-0.5 rounded-lg border border-amber-500/20">30 sec (15s each way)</span>
+                    </div>
+                    <input type="range" id="roundTripTime" min="12" max="90" step="2" value="30" class="w-full">
+                    <p class="text-[11px] text-slate-400">Adjust based on whale hive placement (inner ring ~20–30s, outer ring ~45–70s).</p>
+                </div>
+
+                <!-- Queues & Troop Ratio Preset -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div class="space-y-1.5">
+                        <label for="queuesPerPlayer" class="block text-xs font-medium text-slate-300">Avg Queues / Player</label>
+                        <select id="queuesPerPlayer" class="w-full bg-frost-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-400">
+                            <option value="5">5 March Queues</option>
+                            <option value="6" selected>6 March Queues</option>
+                            <option value="7">7 March Queues</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label for="ratioPreset" class="block text-xs font-medium text-slate-300">Troop Ratio (Inf / Lan / Mrk)</label>
+                        <select id="ratioPreset" class="w-full bg-frost-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-400">
+                            <option value="5,15,80" selected>5% / 15% / 80% (Meta)</option>
+                            <option value="5,25,70">5% / 25% / 70% (Balanced)</option>
+                            <option value="5,35,60">5% / 35% / 60% (Low Marks)</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT COLUMN: Exact Squad Numbers & Copy-Paste Summary (7 cols) -->
+            <section class="lg:col-span-7 flex flex-col gap-6">
+
+                <!-- Exact Troop Preset Card -->
+                <div class="bg-frost-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-4">
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+                            <span>🎯</span> Exact Joiner Preset Numbers
+                        </h2>
+                        <span id="capFormulaLabel" class="text-xs font-mono text-slate-400">
+                            Formula: <code class="text-slate-300">(Whale Cap - Whale March) ÷ 14</code>
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="bg-frost-950 border border-slate-800 rounded-xl p-3 text-center">
+                            <span class="text-[11px] uppercase tracking-wider text-slate-400 block mb-1">Max Joiner Cap</span>
+                            <span id="joinerCapDisplay" class="font-mono text-xl sm:text-2xl font-extrabold text-white">80,000</span>
+                            <span class="text-[11px] text-slate-500 block mt-0.5">troops / march</span>
+                        </div>
+                        <div class="bg-frost-950 border border-sky-900/50 rounded-xl p-3 text-center">
+                            <span class="text-[11px] uppercase tracking-wider text-sky-400 block mb-1">🛡️ Infantry (<span id="infPctLabel">5</span>%)</span>
+                            <span id="infCountDisplay" class="font-mono text-xl sm:text-2xl font-extrabold text-sky-300">4,000</span>
+                            <span class="text-[11px] text-slate-500 block mt-0.5">minimal shield</span>
+                        </div>
+                        <div class="bg-frost-950 border border-purple-900/50 rounded-xl p-3 text-center">
+                            <span class="text-[11px] uppercase tracking-wider text-purple-400 block mb-1">🐎 Lancer (<span id="lanPctLabel">15</span>%)</span>
+                            <span id="lanCountDisplay" class="font-mono text-xl sm:text-2xl font-extrabold text-purple-300">12,000</span>
+                            <span class="text-[11px] text-slate-500 block mt-0.5">secondary dps</span>
+                        </div>
+                        <div class="bg-frost-950 border border-amber-900/50 rounded-xl p-3 text-center">
+                            <span class="text-[11px] uppercase tracking-wider text-amber-400 block mb-1">🏹 Marksman (<span id="mrkPctLabel">80</span>%)</span>
+                            <span id="mrkCountDisplay" class="font-mono text-xl sm:text-2xl font-extrabold text-amber-300">64,000</span>
+                            <span class="text-[11px] text-slate-500 block mt-0.5">primary dps</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alliance Chat Copy-Paste Box -->
+                <div class="bg-frost-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex-1 flex flex-col justify-between space-y-4">
+                    <div class="flex items-center justify-between gap-2">
+                        <div>
+                            <h2 class="text-sm font-bold uppercase tracking-wider text-sky-400 flex items-center gap-2">
+                                <span>📋</span> Alliance Chat / Discord Summary
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-0.5">Clean, concise callout ready to paste into Alliance Chat before Bear opens.</p>
+                        </div>
+                        <button id="copyBtn" type="button" class="px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 active:scale-95 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-sky-500/20 transition cursor-pointer shrink-0">
+                            <span>📋</span>
+                            <span id="copyBtnText">Copy Summary</span>
+                        </button>
+                    </div>
+
+                    <textarea id="copySummaryText" readonly rows="8"
+                        class="w-full bg-frost-950 border border-slate-700/80 rounded-xl p-3.5 font-mono text-xs sm:text-sm text-slate-200 leading-relaxed focus:outline-none resize-none"></textarea>
+
+                    <!-- Slot 1 Hero Quick Reference -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        <div class="bg-emerald-950/40 border border-emerald-500/30 rounded-xl p-2.5">
+                            <span class="font-bold text-emerald-400 block mb-1">✅ Approved Slot 1</span>
+                            <span id="approvedHeroesCard" class="text-slate-300">Jessie, Jasser, Seo-yoon, Jeronimo, Reina, Gwen, Bradley, or <strong>Empty (No Hero)</strong></span>
+                        </div>
+                        <div class="bg-rose-950/40 border border-rose-500/30 rounded-xl p-2.5">
+                            <span class="font-bold text-rose-400 block mb-1">❌ Never Slot 1</span>
+                            <span id="bannedHeroesCard" class="text-slate-300">Sergey, Patrick, Bahiti, Gina, Molly, Flint, Natalia, Zinman</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- BOTTOM SECTION: R4 Strategy Reasoning & Opportunity Loss Diagnostics (Not for Copy-Paste) -->
+        <section class="bg-frost-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <span>📊</span> R4 Strategy Breakdown &amp; Opportunity Loss Analysis
+                    </h2>
+                    <p class="text-xs text-slate-400">Diagnostic view explaining why this cadence was selected and what damage is lost from common mistakes.</p>
+                </div>
+                <span class="text-[11px] uppercase tracking-wider font-semibold px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
+                    On-Screen Reference Only
+                </span>
+            </div>
+
+            <!-- Why This Strategy Was Recommended + Visual Conveyor Cadence -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Dynamic Reasoning + Pacing + Queue Discipline -->
+                <div class="lg:col-span-6 space-y-3">
+                    <div id="strategyReasoningBox" class="p-4 rounded-xl bg-sky-950/30 border border-sky-500/25 space-y-2">
+                        <h3 id="reasoningTitle" class="text-sm font-bold text-sky-300">Why Staggered Conveyor Is Recommended</h3>
+                        <p id="reasoningBody" class="text-xs sm:text-sm text-slate-300 leading-relaxed"></p>
+                    </div>
+                    <div id="pacingNoteBox" class="p-3.5 rounded-xl bg-slate-800/50 border border-slate-700/70 text-xs text-slate-300 leading-relaxed"></div>
+                    <div id="queueDisciplineBox" class="p-3.5 rounded-xl bg-indigo-950/35 border border-indigo-500/30 text-xs text-indigo-200 leading-relaxed"></div>
+                </div>
+
+                <!-- Visual Launch Cadence Timeline -->
+                <div class="lg:col-span-6 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Whale Launch Cadence (First 5-Min Cycle)</h3>
+                        <span id="cycleStatsLabel" class="text-xs font-mono text-sky-400">Cycle: 5m 30s | ~5.4 Rallies/Whale</span>
+                    </div>
+                    <div id="timelineContainer" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+
+            <!-- Estimated Losses Breakdown -->
+            <div class="pt-2">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-rose-400 mb-3 flex items-center gap-1.5">
+                    <span>⚠️</span> Estimated Damage &amp; Participation Lost From Common Mistakes
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Loss Card 1: Over-Capping / Under-Capping -->
+                    <div class="bg-frost-950 border border-slate-800 rounded-xl p-4 space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-200">1. Ignoring Troop Cap</span>
+                            <span id="lossOvercapStat" class="font-mono text-xs font-bold text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded">-36% Joiners</span>
+                        </div>
+                        <p id="lossOvercapDesc" class="text-xs text-slate-400 leading-relaxed"></p>
+                    </div>
+
+                    <!-- Loss Card 2: Wrong Slot-1 Hero -->
+                    <div class="bg-frost-950 border border-slate-800 rounded-xl p-4 space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-200">2. Bad Slot-1 Heroes</span>
+                            <span class="font-mono text-xs font-bold text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded">-20% to -50% DMG</span>
+                        </div>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Only the top 4 expedition skills apply. Each defensive hero (e.g., Sergey/Patrick) pushes out a +25% Attack/Damage buff (Jessie/Jasser), directly slashing whale rally points.
+                        </p>
+                    </div>
+
+                    <!-- Loss Card 3: Timing / Bottleneck Loss -->
+                    <div class="bg-frost-950 border border-slate-800 rounded-xl p-4 space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span id="lossTimingTitle" class="text-xs font-bold text-slate-200">3. Simultaneous Launch</span>
+                            <span id="lossTimingStat" class="font-mono text-xs font-bold text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded">~35% Empty Seats</span>
+                        </div>
+                        <p id="lossTimingDesc" class="text-xs text-slate-400 leading-relaxed"></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Toast Notification for Copy / Admin -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-emerald-500 text-slate-950 font-bold text-xs px-4 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-2 z-50 pointer-events-none">
+        <span id="toastIcon">✅</span>
+        <span id="toastText">Copied Bear Trap summary to clipboard!</span>
+    </div>
+
+    <!-- Admin Password & Configuration Modal -->
+    <div id="adminModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-frost-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">⚙️</span>
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-sky-400">R4 / Leader Admin Settings</h3>
+                </div>
+                <button id="adminCloseBtn" type="button" class="text-slate-400 hover:text-white text-lg leading-none px-2 py-1 cursor-pointer">&times;</button>
+            </div>
+
+            <!-- Step 1: Password Gate -->
+            <div id="adminLoginView" class="space-y-3">
+                <p class="text-xs text-slate-300">Enter the alliance leader password to customize approved heroes, banned heroes, and strategy thresholds.</p>
+                <div>
+                    <label for="adminPasswordInput" class="block text-xs font-medium text-slate-400 mb-1">Admin Password</label>
+                    <input type="password" id="adminPasswordInput" placeholder="Enter password..."
+                        class="w-full bg-frost-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-sky-400">
+                    <p id="adminErrorMsg" class="text-xs text-rose-400 mt-1.5 hidden">Incorrect password. Please try again.</p>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button id="adminCancelBtn" type="button" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer">Cancel</button>
+                    <button id="adminUnlockBtn" type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-sky-500 hover:bg-sky-400 text-slate-950 cursor-pointer">Unlock Settings</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Unlocked Admin Editor -->
+            <div id="adminEditorView" class="space-y-4 hidden">
+                <div>
+                    <label for="adminApprovedHeroes" class="block text-xs font-semibold text-emerald-400 mb-1">✅ Approved Slot-1 Heroes (Included in Copy-Paste)</label>
+                    <textarea id="adminApprovedHeroes" rows="2"
+                        class="w-full bg-frost-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-emerald-400"></textarea>
+                    <span class="text-[11px] text-slate-400">Edit based on your state's current Hero Generation / alliance roster.</span>
+                </div>
+
+                <div>
+                    <label for="adminBannedHeroes" class="block text-xs font-semibold text-rose-400 mb-1">❌ Banned Slot-1 Heroes (Shown on Card &amp; Warning)</label>
+                    <textarea id="adminBannedHeroes" rows="2"
+                        class="w-full bg-frost-950 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-rose-400"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="adminLowThreshold" class="block text-xs font-medium text-slate-300 mb-1">Low Turnout Max Players</label>
+                        <input type="number" id="adminLowThreshold" min="5" max="20" value="12"
+                            class="w-full bg-frost-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-sky-400">
+                    </div>
+                    <div>
+                        <label for="adminFfaThreshold" class="block text-xs font-medium text-slate-300 mb-1">Free-For-All Min Players</label>
+                        <input type="number" id="adminFfaThreshold" min="20" max="60" value="35"
+                            class="w-full bg-frost-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-sky-400">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                    <button id="adminRestoreDefaultsBtn" type="button" class="text-xs text-slate-400 hover:text-white underline cursor-pointer">Restore Default Roster</button>
+                    <button id="adminSaveBtn" type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 cursor-pointer">Save &amp; Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Admin Configuration State (in-memory session state)
+        const DEFAULT_CONFIG = {
+            approvedHeroes: 'Jessie, Jasser, Seo-yoon, Jeronimo, Reina, Gwen, Bradley',
+            bannedHeroes: 'Sergey, Patrick, Bahiti, Gina, Molly, Flint, Natalia, Zinman',
+            lowTurnoutMax: 12,
+            ffaMinPlayers: 35
+        };
+
+        let appConfig = { ...DEFAULT_CONFIG };
+        let isAdminUnlocked = false;
+        const ADMIN_PW = 'WOS4336';
+
+        // DOM Elements
+        const els = {
+            participants: document.getElementById('participants'),
+            participantsVal: document.getElementById('participantsVal'),
+            rangeMidLabel: document.getElementById('rangeMidLabel'),
+            rangeHighLabel: document.getElementById('rangeHighLabel'),
+            noWhalesToggle: document.getElementById('noWhalesToggle'),
+            whaleRallyCap: document.getElementById('whaleRallyCap'),
+            whaleOwnMarch: document.getElementById('whaleOwnMarch'),
+            whaleCount: document.getElementById('whaleCount'),
+            whaleCountVal: document.getElementById('whaleCountVal'),
+            roundTripTime: document.getElementById('roundTripTime'),
+            roundTripVal: document.getElementById('roundTripVal'),
+            queuesPerPlayer: document.getElementById('queuesPerPlayer'),
+            ratioPreset: document.getElementById('ratioPreset'),
+            resetBtn: document.getElementById('resetBtn'),
+
+            // Hero Cards
+            approvedHeroesCard: document.getElementById('approvedHeroesCard'),
+            bannedHeroesCard: document.getElementById('bannedHeroesCard'),
+
+            // Outputs
+            strategyBadge: document.getElementById('strategyBadge'),
+            capFormulaLabel: document.getElementById('capFormulaLabel'),
+            joinerCapDisplay: document.getElementById('joinerCapDisplay'),
+            infPctLabel: document.getElementById('infPctLabel'),
+            lanPctLabel: document.getElementById('lanPctLabel'),
+            mrkPctLabel: document.getElementById('mrkPctLabel'),
+            infCountDisplay: document.getElementById('infCountDisplay'),
+            lanCountDisplay: document.getElementById('lanCountDisplay'),
+            mrkCountDisplay: document.getElementById('mrkCountDisplay'),
+            copySummaryText: document.getElementById('copySummaryText'),
+            copyBtn: document.getElementById('copyBtn'),
+            copyBtnText: document.getElementById('copyBtnText'),
+            toast: document.getElementById('toast'),
+            toastIcon: document.getElementById('toastIcon'),
+            toastText: document.getElementById('toastText'),
+
+            // Diagnostics
+            strategyReasoningBox: document.getElementById('strategyReasoningBox'),
+            reasoningTitle: document.getElementById('reasoningTitle'),
+            reasoningBody: document.getElementById('reasoningBody'),
+            pacingNoteBox: document.getElementById('pacingNoteBox'),
+            queueDisciplineBox: document.getElementById('queueDisciplineBox'),
+            cycleStatsLabel: document.getElementById('cycleStatsLabel'),
+            timelineContainer: document.getElementById('timelineContainer'),
+            lossOvercapStat: document.getElementById('lossOvercapStat'),
+            lossOvercapDesc: document.getElementById('lossOvercapDesc'),
+            lossTimingTitle: document.getElementById('lossTimingTitle'),
+            lossTimingStat: document.getElementById('lossTimingStat'),
+            lossTimingDesc: document.getElementById('lossTimingDesc'),
+
+            // Admin Modal Elements
+            adminOpenBtn: document.getElementById('adminOpenBtn'),
+            adminModal: document.getElementById('adminModal'),
+            adminCloseBtn: document.getElementById('adminCloseBtn'),
+            adminCancelBtn: document.getElementById('adminCancelBtn'),
+            adminLoginView: document.getElementById('adminLoginView'),
+            adminEditorView: document.getElementById('adminEditorView'),
+            adminPasswordInput: document.getElementById('adminPasswordInput'),
+            adminErrorMsg: document.getElementById('adminErrorMsg'),
+            adminUnlockBtn: document.getElementById('adminUnlockBtn'),
+            adminApprovedHeroes: document.getElementById('adminApprovedHeroes'),
+            adminBannedHeroes: document.getElementById('adminBannedHeroes'),
+            adminLowThreshold: document.getElementById('adminLowThreshold'),
+            adminFfaThreshold: document.getElementById('adminFfaThreshold'),
+            adminRestoreDefaultsBtn: document.getElementById('adminRestoreDefaultsBtn'),
+            adminSaveBtn: document.getElementById('adminSaveBtn')
+        };
+
+        // Helper: Show Toast
+        function showToast(message, icon = '✅') {
+            els.toastText.textContent = message;
+            els.toastIcon.textContent = icon;
+            els.toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                els.toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2400);
+        }
+
+        // Helper: Format seconds into M:SS
+        function formatTime(totalSeconds) {
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = Math.round(totalSeconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Helper: Format numbers with commas
+        function fmtNum(num) {
+            return Math.max(0, Math.round(num)).toLocaleString('en-US');
+        }
+
+        function updateCalculator() {
+            const players = parseInt(els.participants.value, 10);
+            const noWhales = els.noWhalesToggle.checked;
+            const rallyCap = Math.max(100000, parseInt(els.whaleRallyCap.value, 10) || 1300000);
+            const whaleMarch = Math.max(10000, parseInt(els.whaleOwnMarch.value, 10) || 180000);
+            const whales = parseInt(els.whaleCount.value, 10);
+            const roundTrip = parseInt(els.roundTripTime.value, 10);
+            const queues = parseInt(els.queuesPerPlayer.value, 10);
+            const [infPct, lanPct, mrkPct] = els.ratioPreset.value.split(',').map(Number);
+
+            // Sync Hero Cards & Range Labels with Admin Config
+            els.approvedHeroesCard.innerHTML = `${appConfig.approvedHeroes}, or <strong>Empty (No Hero)</strong>`;
+            els.bannedHeroesCard.textContent = appConfig.bannedHeroes;
+            els.rangeMidLabel.textContent = `${appConfig.lowTurnoutMax + 1}–${appConfig.ffaMinPlayers - 1} Conveyor`;
+            els.rangeHighLabel.textContent = `${appConfig.ffaMinPlayers}+ FFA`;
+
+            // Update Input Labels
+            els.participantsVal.textContent = `${players} Players`;
+            els.whaleCountVal.textContent = `${whales} Whales`;
+            const oneWay = (roundTrip / 2).toFixed(roundTrip % 2 === 0 ? 0 : 1);
+            els.roundTripVal.textContent = `${roundTrip} sec (${oneWay}s each way)`;
+
+            // Determine Mode using Admin Thresholds
+            const totalAllianceMarches = players * queues;
+            const isLowTurnout = players <= appConfig.lowTurnoutMax || (noWhales && players <= appConfig.lowTurnoutMax + 6);
+            const isFreeForAll = !isLowTurnout && (players >= appConfig.ffaMinPlayers || totalAllianceMarches >= appConfig.ffaMinPlayers * 5.5);
+
+            // 1. Joiner Cap Calculation
+            const availableJoinerSpace = Math.max(14000, rallyCap - whaleMarch);
+            const rawCap = Math.floor(availableJoinerSpace / 14);
+            const joinerCap = Math.floor(rawCap / 500) * 500;
+
+            // 2. Exact Troop Counts (or Percentages in Low Turnout / Max March mode)
+            const infCount = Math.round(joinerCap * (infPct / 100));
+            const lanCount = Math.round(joinerCap * (lanPct / 100));
+            const mrkCount = joinerCap - infCount - lanCount;
+
+            els.infPctLabel.textContent = infPct;
+            els.lanPctLabel.textContent = lanPct;
+            els.mrkPctLabel.textContent = mrkPct;
+
+            if (isLowTurnout) {
+                els.capFormulaLabel.innerHTML = `Mode: <span class="text-purple-300 font-semibold">Fewer than 14 joiners exist — send 100% FULL marches!</span>`;
+                els.joinerCapDisplay.textContent = `MAX (No Cap)`;
+                els.infCountDisplay.textContent = `${infPct}% Max`;
+                els.lanCountDisplay.textContent = `${lanPct}% Max`;
+                els.mrkCountDisplay.textContent = `${mrkPct}% Max`;
+            } else {
+                els.capFormulaLabel.innerHTML = `Formula: <code class="text-slate-300">(Whale Cap - Whale March) ÷ 14</code>`;
+                els.joinerCapDisplay.textContent = fmtNum(joinerCap);
+                els.infCountDisplay.textContent = fmtNum(infCount);
+                els.lanCountDisplay.textContent = fmtNum(lanCount);
+                els.mrkCountDisplay.textContent = fmtNum(mrkCount);
+            }
+
+            // 3. Cycle & Conveyor Math
+            const rallyDuration = 300; // 5 minutes fixed
+            const fullCycleSec = rallyDuration + roundTrip;
+            const totalEventSec = 1800; // 30 minutes
+            const ralliesPerWhale = (totalEventSec / fullCycleSec).toFixed(1);
+            const totalSeatsAcrossWhales = whales * 14;
+
+            // Recommended Rallies to Open
+            let recommendedLeaders = whales;
+            if (isLowTurnout) {
+                recommendedLeaders = players <= 8 ? players : Math.max(4, players - 1);
+            } else if (isFreeForAll) {
+                recommendedLeaders = Math.min(players, Math.max(whales + 3, Math.floor(totalAllianceMarches / 16)));
+            } else {
+                const maxSupportableRallies = Math.max(2, Math.floor((players * (queues - 1)) / 10));
+                recommendedLeaders = Math.min(whales, maxSupportableRallies);
+            }
+
+            // Stagger interval across the cycle
+            const staggerSec = Math.round(fullCycleSec / recommendedLeaders);
+
+            // Build Cadence String & Visual Timeline
+            let cadenceParts = [];
+            els.timelineContainer.innerHTML = '';
+
+            if (isLowTurnout) {
+                const row = document.createElement('div');
+                row.className = 'p-3 rounded-xl bg-purple-950/40 border border-purple-500/30 text-xs text-purple-200 flex items-center justify-between gap-2';
+                row.innerHTML = `
+                    <span>🔥 <strong>All-Hands Rally Mode:</strong> ${recommendedLeaders === players ? 'All ' + players + ' players' : 'Top ' + recommendedLeaders + ' players'} open rallies immediately on cooldown and use remaining ${queues - 1} queues to join each other.</span>
+                    <span class="font-mono text-purple-300 font-bold shrink-0">No Stagger</span>
+                `;
+                els.timelineContainer.appendChild(row);
+            } else if (!isFreeForAll) {
+                for (let i = 0; i < recommendedLeaders; i++) {
+                    const offset = i * staggerSec;
+                    const timeStr = formatTime(offset);
+                    cadenceParts.push(`W${i + 1}: +${timeStr}`);
+
+                    const leftPct = Math.min(75, (offset / 360) * 100);
+                    const widthPct = Math.min(100 - leftPct, (fullCycleSec / 450) * 65);
+
+                    const row = document.createElement('div');
+                    row.className = 'flex items-center gap-2 text-xs';
+                    row.innerHTML = `
+                        <span class="w-16 font-mono text-slate-400 shrink-0">Whale #${i + 1}</span>
+                        <div class="flex-1 h-5 bg-frost-950 rounded-md border border-slate-800 relative overflow-hidden">
+                            <div style="left: ${leftPct}%; width: ${widthPct}%;"
+                                class="absolute top-0 bottom-0 bg-gradient-to-r from-sky-500/80 to-blue-600/80 rounded flex items-center px-2 text-[10px] font-mono font-bold text-white whitespace-nowrap">
+                                Launch +${timeStr}
+                            </div>
+                        </div>
+                    `;
+                    els.timelineContainer.appendChild(row);
+                }
+            } else {
+                const row = document.createElement('div');
+                row.className = 'p-3 rounded-xl bg-amber-950/30 border border-amber-500/30 text-xs text-amber-200 flex items-center justify-between gap-2';
+                row.innerHTML = `
+                    <span>⚡ <strong>High-Volume Free-For-All Active:</strong> Top ${recommendedLeaders} rally leaders launch immediately on cooldown (0:00).</span>
+                    <span class="font-mono text-amber-400 font-bold shrink-0">No Delay</span>
+                `;
+                els.timelineContainer.appendChild(row);
+            }
+
+            // Update Mode Badge, Reasoning Box & Activity Pacing Note
+            if (isLowTurnout) {
+                els.strategyBadge.textContent = 'Low Turnout / All-Hands';
+                els.strategyBadge.className = 'px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-purple-500/15 text-purple-300 border border-purple-500/30';
+
+                els.strategyReasoningBox.className = 'p-4 rounded-xl bg-purple-950/30 border border-purple-500/30 space-y-2';
+                els.reasoningTitle.className = 'text-sm font-bold text-purple-300';
+                els.reasoningTitle.textContent = `Why Uncapped All-Hands Is Optimal (${players} Players${noWhales ? ' / No Whales' : ''})`;
+                els.reasoningBody.innerHTML = `
+                    With only <strong>${players} active players</strong>, there are at most <strong>${players - 1} joiners</strong> available for any rally—well below the 14-joiner limit. Capping troop counts here leaves rallies half-empty, and restricting rally leaders leaves everyone else's ${queues} march queues sitting idle in base. Have <strong>${recommendedLeaders === players ? 'everyone' : 'your top ' + recommendedLeaders}</strong> open rallies on cooldown and send <strong>100% full marches</strong>.
+                `;
+                els.pacingNoteBox.innerHTML = `
+                    🎮 <strong>Activity &amp; Pacing Note:</strong> Because everyone is both leading their own rally and filling ${players - 1} teammates' rallies every 5 minutes, players stay busy managing all ${queues} queues without needing artificial stagger timers.
+                `;
+                els.queueDisciplineBox.innerHTML = `
+                    📋 <strong>Join Top-Down (No Cherry-Picking):</strong> Join rallies from the top of the War menu down so the oldest rallies hit 100% capacity before launching, rather than scattering troops evenly across all ${recommendedLeaders} rallies.
+                `;
+            } else if (isFreeForAll) {
+                els.strategyBadge.textContent = 'High-Volume Free-For-All';
+                els.strategyBadge.className = 'px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/30';
+
+                els.strategyReasoningBox.className = 'p-4 rounded-xl bg-amber-950/30 border border-amber-500/30 space-y-2';
+                els.reasoningTitle.className = 'text-sm font-bold text-amber-300';
+                els.reasoningTitle.textContent = `Why Free-For-All Is Recommended (${players} Players / ${totalAllianceMarches} Marches)`;
+                els.reasoningBody.innerHTML = `
+                    With <strong>${players} active members</strong> (~${totalAllianceMarches} march queues), your alliance has more than enough troops to fill <strong>${recommendedLeaders} simultaneous rallies</strong> in seconds. Holding whales back with long delays at this population leaves dozens of member marches sitting idle, costing total alliance damage. Launch immediately on cooldown while strictly enforcing the <strong>${fmtNum(joinerCap)} troop cap</strong> and <strong>Slot-1 Hero</strong> rules.
+                `;
+                els.pacingNoteBox.innerHTML = `
+                    🎮 <strong>Activity &amp; Pacing Note:</strong> Even though Free-For-All maximizes raw damage at ${appConfig.ffaMinPlayers}+ players, rallies fill so fast that slower clickers can feel left out—or stuck waiting 5 minutes between bursts. If your alliance prefers the steady rhythm of a conveyor belt, R4s can optionally run a <strong>light 15–20s stagger</strong> so marches trickle open continuously rather than all at once.
+                `;
+                els.queueDisciplineBox.innerHTML = `
+                    📋 <strong>Why Top-Down Beats Cherry-Picking:</strong> Join the <strong>top rally in the War tab first</strong> (the one closest to launching) instead of scrolling down to cherry-pick a specific whale. Cherry-picking leaves the top rally launching at 75% capacity while everyone waits around for a lower rally timer—breaking the conveyor rhythm and costing total rallies completed.
+                `;
+            } else {
+                els.strategyBadge.textContent = 'Staggered Conveyor Mode';
+                els.strategyBadge.className = 'px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-sky-500/15 text-sky-300 border border-sky-500/30';
+
+                els.strategyReasoningBox.className = 'p-4 rounded-xl bg-sky-950/30 border border-sky-500/25 space-y-2';
+                els.reasoningTitle.className = 'text-sm font-bold text-sky-300';
+                els.reasoningTitle.textContent = `Why Staggered Conveyor Is Optimal (${players} Players / ${totalSeatsAcrossWhales} Whale Seats)`;
+                els.reasoningBody.innerHTML = `
+                    With <strong>${players} online members</strong>, simultaneous launches would split your joiners across half-empty rallies. Staggering your top <strong>${recommendedLeaders} whales</strong> every <strong>${staggerSec} seconds</strong> ensures that as soon as members return from Whale #1 (${roundTrip}s round-trip), Whale #${recommendedLeaders} is opening—keeping every whale rally 100% full for all <strong>~${ralliesPerWhale} cycles</strong>.
+                `;
+                els.pacingNoteBox.innerHTML = `
+                    🎮 <strong>Activity &amp; Pacing Note:</strong> Beyond pure damage math, the conveyor belt keeps Bear Trap <strong>engaging and active</strong>. Instead of clicking 6 marches in 5 seconds and staring at a 5-minute countdown timer, players get a steady rhythm of a fresh whale rally opening every <strong>${staggerSec} seconds</strong>.
+                `;
+                els.queueDisciplineBox.innerHTML = `
+                    📋 <strong>Work the Queue Top-Down (No Cherry-Picking!):</strong> In a conveyor belt, the War tab naturally sorts rallies by shortest remaining timer at the top. Always fill the <strong>top rally first</strong> until it hits 15/15 before joining the next one down. Skipping the top rally to cherry-pick a favorite whale starves the rally about to launch and stalls the entire belt.
+                `;
+            }
+
+            els.cycleStatsLabel.textContent = `Cycle: ${formatTime(fullCycleSec)} | ~${ralliesPerWhale} Rallies/Leader`;
+
+            // 4. Update Loss Diagnostics
+            if (isLowTurnout) {
+                const wastedPct = Math.round(((135000 - joinerCap) / 135000) * 100);
+                els.lossOvercapStat.textContent = `-${Math.max(25, wastedPct)}% Rally Power`;
+                els.lossOvercapDesc.textContent = `Artificially capping marches at ${fmtNum(joinerCap)} when only ${players - 1} joiners exist leaves rallies half-empty. Send 100% MAX!`;
+
+                els.lossTimingTitle.textContent = '3. Restricting Leaders';
+                const idleQueues = Math.max(2, queues - (players - 1));
+                els.lossTimingStat.textContent = `~${idleQueues} Idle Queues/Player`;
+                els.lossTimingDesc.textContent = `If only 2 people open rallies with ${players} players online, everyone else has ${idleQueues}+ march queues sitting idle doing 0 damage.`;
+            } else {
+                const uncappedMarchSize = 135000;
+                const playersFitUncapped = Math.max(1, Math.floor(availableJoinerSpace / uncappedMarchSize));
+                const lockedOutPlayers = Math.max(0, 14 - playersFitUncapped);
+                const lockedOutPct = Math.round((lockedOutPlayers / 14) * 100);
+
+                els.lossOvercapStat.textContent = `-${lockedOutPct}% Joiners/Rally`;
+                els.lossOvercapDesc.textContent = `Uncapped ~135k marches only fit ${playersFitUncapped} joiners instead of 14, locking out ${lockedOutPlayers} members per whale rally.`;
+
+                if (isFreeForAll) {
+                    els.lossTimingTitle.textContent = '3. Heavy Staggering';
+                    const idleMarches = Math.max(15, totalAllianceMarches - (recommendedLeaders * 15));
+                    els.lossTimingStat.textContent = `~${idleMarches} Idle Marches`;
+                    els.lossTimingDesc.textContent = `Long whale delays at ${players}+ players strand ~${idleMarches} marches in base waiting for rally slots to open.`;
+                } else {
+                    els.lossTimingTitle.textContent = '3. Simultaneous Launch';
+                    const fillPct = Math.min(95, Math.round(((players * (queues - 1)) / (recommendedLeaders * 14)) * 100));
+                    els.lossTimingStat.textContent = `${100 - fillPct}% Empty Seats`;
+                    els.lossTimingDesc.textContent = `Launching all ${recommendedLeaders} whales at 0:00 spreads joiners thin, leaving rallies ~${100 - fillPct}% empty or delaying launches.`;
+                }
+            }
+
+            if (roundTrip >= 50) {
+                els.lossTimingDesc.textContent += ` ⚠️ High ${roundTrip}s march time cuts leaders down to ${ralliesPerWhale} rallies.`;
+            }
+
+            // 5. Generate Clean Copy-Paste Text
+            let modeLine, cadenceLine, capLine, presetLine;
+
+            if (isLowTurnout) {
+                modeLine = `ALL-HANDS RALLY (Low Turnout — No Stagger)`;
+                cadenceLine = `Open Rallies: ${recommendedLeaders === players ? 'EVERYONE opens on cooldown!' : 'Top ' + recommendedLeaders + ' open on cooldown — join all!'}`;
+                capLine = `Joiner Cap: NO CAP — Send 100% MAX MARCHES!`;
+                presetLine = `Target Ratio: 🛡️ ${infPct}% Inf | 🐎 ${lanPct}% Lan | 🏹 ${mrkPct}% Marks`;
+            } else if (isFreeForAll) {
+                modeLine = `FREE-FOR-ALL (Launch immediately on cooldown!)`;
+                cadenceLine = `Top ${recommendedLeaders} Rally Leaders open ASAP — everyone else joins!`;
+                capLine = `Joiner Cap: ${fmtNum(joinerCap)} max per march`;
+                presetLine = `Preset (${infPct}/${lanPct}/${mrkPct}): 🛡️ ${fmtNum(infCount)} Inf | 🐎 ${fmtNum(lanCount)} Lan | 🏹 ${fmtNum(mrkCount)} Marks`;
+            } else {
+                modeLine = `STAGGERED CONVEYOR (${staggerSec}s intervals)`;
+                cadenceLine = `Open Rallies: Top ${recommendedLeaders} Whales ONLY\nCadence: ${cadenceParts.join(' | ')}`;
+                capLine = `Joiner Cap: ${fmtNum(joinerCap)} max per march`;
+                presetLine = `Preset (${infPct}/${lanPct}/${mrkPct}): 🛡️ ${fmtNum(infCount)} Inf | 🐎 ${fmtNum(lanCount)} Lan | 🏹 ${fmtNum(mrkCount)} Marks`;
+            }
+
+            const firstTwoBanned = appConfig.bannedHeroes.split(',').slice(0, 2).map(s => s.trim()).filter(Boolean).join('/');
+            const bannedNote = firstTwoBanned ? ` (NO ${firstTwoBanned}!)` : '';
+
+            const summary = [
+                `🐻 BEAR TRAP SETUP (${players} Active) 🐻`,
+                `Mode: ${modeLine}`,
+                `${cadenceLine}`,
+                `${capLine}`,
+                `${presetLine}`,
+                `📋 JOIN TOP-DOWN: Fill the top rally in the War tab first — NO cherry-picking!`,
+                `⚠️ SLOT 1 HERO: ${appConfig.approvedHeroes} — OR NO HERO!${bannedNote}`
+            ].join('\n');
+
+            els.copySummaryText.value = summary;
+        }
+
+        // Admin Modal Logic
+        function openAdminModal() {
+            els.adminModal.classList.remove('hidden');
+            els.adminModal.classList.add('flex');
+            els.adminErrorMsg.classList.add('hidden');
+            if (isAdminUnlocked) {
+                els.adminLoginView.classList.add('hidden');
+                els.adminEditorView.classList.remove('hidden');
+                populateAdminFields();
+            } else {
+                els.adminLoginView.classList.remove('hidden');
+                els.adminEditorView.classList.add('hidden');
+                els.adminPasswordInput.value = '';
+                setTimeout(() => els.adminPasswordInput.focus(), 50);
+            }
+        }
+
+        function closeAdminModal() {
+            els.adminModal.classList.add('hidden');
+            els.adminModal.classList.remove('flex');
+        }
+
+        function populateAdminFields() {
+            els.adminApprovedHeroes.value = appConfig.approvedHeroes;
+            els.adminBannedHeroes.value = appConfig.bannedHeroes;
+            els.adminLowThreshold.value = appConfig.lowTurnoutMax;
+            els.adminFfaThreshold.value = appConfig.ffaMinPlayers;
+        }
+
+        function attemptAdminUnlock() {
+            if (els.adminPasswordInput.value.trim() === ADMIN_PW) {
+                isAdminUnlocked = true;
+                els.adminErrorMsg.classList.add('hidden');
+                els.adminLoginView.classList.add('hidden');
+                els.adminEditorView.classList.remove('hidden');
+                els.adminOpenBtn.innerHTML = '<span>🔓</span><span>Admin</span>';
+                populateAdminFields();
+            } else {
+                els.adminErrorMsg.classList.remove('hidden');
+                els.adminPasswordInput.select();
+            }
+        }
+
+        els.adminOpenBtn.addEventListener('click', openAdminModal);
+        els.adminCloseBtn.addEventListener('click', closeAdminModal);
+        els.adminCancelBtn.addEventListener('click', closeAdminModal);
+        els.adminUnlockBtn.addEventListener('click', attemptAdminUnlock);
+        els.adminPasswordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') attemptAdminUnlock();
+        });
+
+        els.adminSaveBtn.addEventListener('click', () => {
+            const approved = els.adminApprovedHeroes.value.trim();
+            const banned = els.adminBannedHeroes.value.trim();
+            const lowMax = Math.max(5, Math.min(20, parseInt(els.adminLowThreshold.value, 10) || 12));
+            const ffaMin = Math.max(lowMax + 5, Math.min(60, parseInt(els.adminFfaThreshold.value, 10) || 35));
+
+            appConfig.approvedHeroes = approved || DEFAULT_CONFIG.approvedHeroes;
+            appConfig.bannedHeroes = banned || DEFAULT_CONFIG.bannedHeroes;
+            appConfig.lowTurnoutMax = lowMax;
+            appConfig.ffaMinPlayers = ffaMin;
+
+            updateCalculator();
+            closeAdminModal();
+            showToast('Admin settings saved & applied!', '⚙️');
+        });
+
+        els.adminRestoreDefaultsBtn.addEventListener('click', () => {
+            appConfig = { ...DEFAULT_CONFIG };
+            populateAdminFields();
+            updateCalculator();
+            showToast('Default hero roster restored.', '🔄');
+        });
+
+        // Event Listeners for Live Updates
+        [
+            els.participants,
+            els.noWhalesToggle,
+            els.whaleRallyCap,
+            els.whaleOwnMarch,
+            els.whaleCount,
+            els.roundTripTime,
+            els.queuesPerPlayer,
+            els.ratioPreset
+        ].forEach(el => {
+            el.addEventListener('input', updateCalculator);
+            el.addEventListener('change', updateCalculator);
+        });
+
+        // Reset Button
+        els.resetBtn.addEventListener('click', () => {
+            els.participants.value = 24;
+            els.noWhalesToggle.checked = false;
+            els.whaleRallyCap.value = 1300000;
+            els.whaleOwnMarch.value = 180000;
+            els.whaleCount.value = 5;
+            els.roundTripTime.value = 30;
+            els.queuesPerPlayer.value = 6;
+            els.ratioPreset.value = '5,15,80';
+            updateCalculator();
+            showToast('Sliders reset to defaults.', '🔄');
+        });
+
+        // Copy to Clipboard (using execCommand fallback for reliable iframe support)
+        els.copyBtn.addEventListener('click', () => {
+            els.copySummaryText.focus();
+            els.copySummaryText.select();
+            els.copySummaryText.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                els.copyBtnText.textContent = 'Copied!';
+                showToast('Copied Bear Trap summary to clipboard!', '✅');
+                setTimeout(() => {
+                    els.copyBtnText.textContent = 'Copy Summary';
+                }, 2200);
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
+        });
+
+        // Initialize on load
+        updateCalculator();
+    </script>
+</body>
+</html>
